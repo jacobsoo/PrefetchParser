@@ -152,9 +152,6 @@ namespace Prefetch_Parser
                 }
                 iPosition = (int)binaryReader.BaseStream.Position;
             }
-            //foreach( PrefetchVolInfoClass v in pf.VolumeInfo){
-                //v.ParseInfo(pos, file);
-            //}
             binaryReader.Close();
             int gg = pf.VolumeInfo.Length;
             for(int j=0; j<pf.VolumeInfo.Count(); j++){

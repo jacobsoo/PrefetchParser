@@ -8,12 +8,6 @@ namespace Prefetch_Parser
 {
     class PrefetchVolInfoClass
     {
-        /*
-        public struct PrefetchVolInfo
-        {
-        }
-        */
-
         public int VolumePathOffset;
         public int VolumePathLength;
         public DateTime CreatedDate;
