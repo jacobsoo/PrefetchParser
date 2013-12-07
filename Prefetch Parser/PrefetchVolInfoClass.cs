@@ -29,15 +29,16 @@ namespace Prefetch_Parser
                 string name = Encoding.Unicode.GetString(array).TrimEnd('\0'); //bytestostring_littleendian(array);
                 binaryReader.BaseStream.Position = pos + FolderPathOffset;
                 List<string> iFolderPaths = new List<string>();
-                for (int i = 0; i < NumFolderPaths; ++i)
+                for (int i = 0; i < NumFolderPaths; i++)
                 {
-                    binaryReader.Read(array, 0, 2);
-                    int len = BitConverter.ToInt16(array, 0);
-                    binaryReader.Read(array, 0, len*2);
-                    string szPath = Encoding.Unicode.GetString(array).TrimEnd('\0');
+                    byte[] array2 = new byte[100000];
+                    binaryReader.Read(array2, 0, 2);
+                    uint len = BitConverter.ToUInt16(array2, 0);
+                    binaryReader.Read(array2, 0, (int)len*2);
+                    string szPath = Encoding.Unicode.GetString(array2).TrimEnd('\0');
                     if (szPath != "")
                         iFolderPaths.Add(szPath);
-                    binaryReader.Read(array, 0, 2);
+                    binaryReader.Read(array2, 0, 2);
                 }
                 FolderPaths = iFolderPaths.ToArray();
             }

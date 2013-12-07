@@ -87,11 +87,23 @@ namespace Prefetch_Parser
             PrefetchProcessingClass pfProcessing = new PrefetchProcessingClass();
             PrefetchInfoClass pf = new PrefetchInfoClass();
             bool isVista = false, isWin8 = false;
-            pfProcessing.ProcessEntries(ref pf, ref isVista, ref isWin8, j);
-            string mD5HashFromFile = GetMD5HashFromFile(pf.FilePath);
-            DateTime? myTime = null;
-            if (!isWin8){
-                dtPrefetchInfo.Rows.Add(new object[]{
+            foreach (string filepath in j)
+            {
+                if (pfProcessing.IsPrefetchFile(filepath))
+                {
+                    try
+                    {
+                        if (pfProcessing.CheckHeader(filepath, ref isVista, ref isWin8))
+                        {
+                            pf.IsVista = isVista;
+                            pf.IsWin8 = isWin8;
+                            pf.FilePath = filepath;
+                            pfProcessing.ParsePfFile(filepath, ref pf);
+                            string mD5HashFromFile = GetMD5HashFromFile(pf.FilePath);
+                            DateTime? myTime = null;
+                            if (!isWin8)
+                            {
+                                dtPrefetchInfo.Rows.Add(new object[]{
                                     Path.GetFileName(pf.FilePath),
                                     pf.NameWithoutHash,
                                     pf.PathHash,
@@ -108,8 +120,10 @@ namespace Prefetch_Parser
                                     pf.VolumeInfo[0].CreatedDate,
 								    mD5HashFromFile
 							    });
-            }else{
-                dtPrefetchInfo.Rows.Add(new object[]{
+                            }
+                            else
+                            {
+                                dtPrefetchInfo.Rows.Add(new object[]{
                                     Path.GetFileName(pf.FilePath),
                                     pf.NameWithoutHash,
                                     pf.PathHash,
@@ -126,60 +140,68 @@ namespace Prefetch_Parser
                                     pf.VolumeInfo[0].CreatedDate,
 								    mD5HashFromFile
 							    });
-            }
-            int iVolInfoCount = pf.VolumeInfo.Count();
-            for (int k = 0; k < iVolInfoCount; k++)
-            {
-                if (pf.VolumeInfo[k] != null)
-                {
-                    int iFolderCount = pf.VolumeInfo[k].FolderPaths.Count();
-                    for (int m = 0; m < iFolderCount; m++)
-                    {
-                        dtPrefetchVolInfo.Rows.Add(new object[]
+                            }
+                            int iVolInfoCount = pf.VolumeInfo.Count();
+                            for (int k = 0; k < iVolInfoCount; k++)
+                            {
+                                if (pf.VolumeInfo[k] != null)
+                                {
+                                    int iFolderCount = pf.VolumeInfo[k].FolderPaths.Count();
+                                    for (int m = 0; m < iFolderCount; m++)
+                                    {
+                                        dtPrefetchVolInfo.Rows.Add(new object[]
                             {
                                 Path.GetFileName(pf.FilePath),
                                 pf.VolumeInfo[k].FolderPaths[m]
                             });
+                                    }
+                                }
+                            }
+                            int iFileInfoCount = pf.FilesAccessed.Count();
+                            for (int f = 0; f < iFileInfoCount; f++)
+                            {
+                                dtPrefetchSubInfo.Rows.Add(new object[]
+                                {
+                                    Path.GetFileName(pf.FilePath),
+                                    pf.FilesAccessed[f]
+                                });
+                            }
+
+                            dataGridView.DataSource = dtPrefetchInfo;
+                            dataGridView.Visible = true;
+                            dataGridView.Enabled = true;
+                            dataGridpfFile.DataSource = dtPrefetchSubInfo;
+                            dataGridpfFile.Visible = true;
+                            dataGridpfFile.Enabled = true;
+                            dataGridpfVolume.DataSource = dtPrefetchVolInfo;
+                            dataGridpfVolume.Visible = true;
+                            dataGridpfVolume.Enabled = true;
+                            exportToToolStripMenuItem.Visible = true;
+                            xMLToolStripMenuItem.Visible = true;
+                            cSVToolStripMenuItem.Visible = true;
+                            dataGridView.Columns["Last Run Time (UTC)"].DefaultCellStyle.Format = "dd/MM/yyyy HH:mm:ss";
+                            dataGridView.Columns["Volume Created Date (UTC)"].DefaultCellStyle.Format = "dd/MM/yyyy HH:mm:ss";
+                            if (!isWin8)
+                            {
+                                dataGridView.Columns["2nd Last Run Time (UTC)"].Visible = false;
+                                dataGridView.Columns["3rd Last Run Time (UTC)"].Visible = false;
+                                dataGridView.Columns["4th Last Run Time (UTC)"].Visible = false;
+                                dataGridView.Columns["5th Last Run Time (UTC)"].Visible = false;
+                                dataGridView.Columns["6th Last Run Time (UTC)"].Visible = false;
+                                dataGridView.Columns["7th Last Run Time (UTC)"].Visible = false;
+                                dataGridView.Columns["8th Last Run Time (UTC)"].Visible = false;
+                            }
+                            stopwatch.Stop();
+                            // TSSLabel.Text =  iNum + " files parsed.";
+                            string str = stopwatch.Elapsed.TotalSeconds.ToString();
+                            TSSLabel2.Text = "Take taken: " + str + " seconds.";
+                        }
+                    }
+                    finally
+                    {
                     }
                 }
             }
-            int iFileInfoCount = pf.FilesAccessed.Count();
-            for (int f = 0; f < iFileInfoCount; f++)
-            {
-                dtPrefetchSubInfo.Rows.Add(new object[]
-                {
-                    Path.GetFileName(pf.FilePath),
-                    pf.FilesAccessed[f]
-                });
-            }
-
-            dataGridView.DataSource = dtPrefetchInfo;
-            dataGridView.Visible = true;
-            dataGridView.Enabled = true;
-            dataGridpfFile.DataSource = dtPrefetchSubInfo;
-            dataGridpfFile.Visible = true;
-            dataGridpfFile.Enabled = true;
-            dataGridpfVolume.DataSource = dtPrefetchVolInfo;
-            dataGridpfVolume.Visible = true;
-            dataGridpfVolume.Enabled = true;
-            exportToToolStripMenuItem.Visible = true;
-            xMLToolStripMenuItem.Visible = true;
-            cSVToolStripMenuItem.Visible = true;
-            dataGridView.Columns["Last Run Time (UTC)"].DefaultCellStyle.Format = "dd/MM/yyyy HH:mm:ss";
-            dataGridView.Columns["Volume Created Date (UTC)"].DefaultCellStyle.Format = "dd/MM/yyyy HH:mm:ss";
-            if (!isWin8){
-                dataGridView.Columns["2nd Last Run Time (UTC)"].Visible = false;
-                dataGridView.Columns["3rd Last Run Time (UTC)"].Visible = false;
-                dataGridView.Columns["4th Last Run Time (UTC)"].Visible = false;
-                dataGridView.Columns["5th Last Run Time (UTC)"].Visible = false;
-                dataGridView.Columns["6th Last Run Time (UTC)"].Visible = false;
-                dataGridView.Columns["7th Last Run Time (UTC)"].Visible = false;
-                dataGridView.Columns["8th Last Run Time (UTC)"].Visible = false;
-            }
-            stopwatch.Stop();
-            // TSSLabel.Text =  iNum + " files parsed.";
-            string str = stopwatch.Elapsed.TotalSeconds.ToString();
-            TSSLabel2.Text = "Take taken: " + str + " seconds.";
         }
 
         public string GetMD5HashFromFile(string fileName)
@@ -215,7 +237,7 @@ namespace Prefetch_Parser
             object value = Registry.GetValue("HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\\PrefetchParameters", "EnablePrefetcher", 0);
             value.ToString();
             string path = Environment.GetEnvironmentVariable("SystemRoot") + "\\Prefetch";
-            bool flag = true;// CheckAdmin();
+            bool flag = CheckAdmin();
             if (!flag)
             {
                 MessageBox.Show("The current user is not an administrator, you can't access the folder to the LocalMachine.");
@@ -285,19 +307,12 @@ namespace Prefetch_Parser
 
         private void dataGridView_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.RowIndex < 0 || dataGridView[e.ColumnIndex, e.RowIndex].Value.ToString() != "FileName")
-            {
-            }
-            else
-            {
-                string str = "", rowFilter = "";
-                str = this.dataGridView["FileName", e.RowIndex].Value.ToString();
-                rowFilter = "FileName = " + "'" + str + "'";
-                if (dataGridpfFile.DataSource != null)
-                {
-                    ((DataTable)this.dataGridpfFile.DataSource).DefaultView.RowFilter = rowFilter;
-                    ((DataTable)this.dataGridpfVolume.DataSource).DefaultView.RowFilter = rowFilter;
-                }
+            string str = "", rowFilter = "";
+            str = this.dataGridView["FileName", e.RowIndex].Value.ToString();
+            rowFilter = "FileName = " + "'" + str + "'";
+            if (dataGridpfFile.DataSource != null){
+                ((DataTable)this.dataGridpfFile.DataSource).DefaultView.RowFilter = rowFilter;
+                ((DataTable)this.dataGridpfVolume.DataSource).DefaultView.RowFilter = rowFilter;
             }
         }
     }

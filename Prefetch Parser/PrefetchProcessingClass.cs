@@ -11,26 +11,6 @@ namespace Prefetch_Parser
 {
     class PrefetchProcessingClass
     {
-        public void ProcessEntries(ref PrefetchInfoClass pf, ref bool isVista, ref bool isWin8, string[] files){
-            foreach (string filepath in files){
-                if ( IsPrefetchFile(filepath)) {
-                    try
-                    {
-                        if (CheckHeader(filepath, ref isVista, ref isWin8))
-                        {
-                            pf.IsVista = isVista;
-                            pf.IsWin8 = isWin8;
-                            pf.FilePath = filepath;
-                            ParsePfFile(filepath, ref pf);
-                        }
-                    }
-                    finally
-                    {
-                    }
-                }
-            }
-        }
-
         public void ParsePfFile(string filepath, ref PrefetchInfoClass pf)
         {
             byte[] array = new byte[4];
